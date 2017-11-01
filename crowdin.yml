@@ -1,0 +1,3 @@
+files:
+  - source: '**/Language.properties'
+    translation: '%original_path%/Language_%locale_with_underscore%.properties'
