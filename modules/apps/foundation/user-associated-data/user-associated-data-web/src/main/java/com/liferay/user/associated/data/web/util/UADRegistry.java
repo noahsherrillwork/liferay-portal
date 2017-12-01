@@ -14,17 +14,38 @@
 
 package com.liferay.user.associated.data.web.util;
 
-import aQute.bnd.annotation.ProviderType;
+import com.liferay.user.associated.data.web.model.UADService;
 
-import com.liferay.portal.kernel.annotation.ImplementationClassName;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author William Newbury
  */
 public class UADRegistry {
-	public void register();
 
-	public void notify();
+	public UADRegistry() {
+		_uadServices = new ArrayList<>();
+	}
 
-	private List<UADService>
+	public void notify(long userId) {
+		for (UADService uadService : _uadServices) {
+			uadService.process(userId);
+		}
+	}
+
+	public void register(UADService uadService) {
+		_uadServices.add(uadService);
+	}
+
+	public void unregister(String name) {
+		for (UADService uadService : _uadServices) {
+			if (name.equals(uadService.getName())) {
+				_uadServices.remove(uadService);
+			}
+		}
+	}
+
+	private final List<UADService> _uadServices;
+
 }

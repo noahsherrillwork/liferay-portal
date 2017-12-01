@@ -29,16 +29,22 @@ import java.net.URL;
 @ProviderType
 public interface UADAsset {
 
-	public void autoAnalyze();
+	public void autoAnonymize();
 
-	public void deletE();
+	public void delete();
 
 	public void export();
 
-	public UADAsset getChild();
+	public UADAsset getChildUADAsset();
 
 	public URL getEditURL();
 
-	public UADAsset getParent();
+	public UADAsset getParentUADAsset();
+
+	public long getUserId();
+
+	public void setChildUADAsset(UADAsset uadAsset);
+
+	public void setParentUADAsset(UADAsset uadAsset);
 
 }

@@ -29,16 +29,18 @@ import java.util.List;
 @ProviderType
 public interface UADService {
 
-	public void autoAnonymizeAll();
+	public void autoAnonymizeAll(long userId);
 
-	public long count();
+	public long count(long userId);
 
-	public void deleteAll();
+	public void deleteAll(long userId);
 
-	public void exportAll();
+	public void exportAll(long userId);
 
-	public List<UADAsset> getAssets();
+	public String getName();
 
-	public void process();
+	public List<UADAsset> getUADAssets(long userId);
+
+	public void process(long userId);
 
 }
