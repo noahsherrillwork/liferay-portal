@@ -29,16 +29,22 @@ public class UADRegistry {
 	}
 
 	public void notify(long userId) {
+		System.out.println("############################ notify");
+
 		for (UADService uadService : _uadServices) {
 			uadService.process(userId);
 		}
 	}
 
 	public void register(UADService uadService) {
+		System.out.println("############################ Registering");
+
 		_uadServices.add(uadService);
 	}
 
 	public void unregister(String name) {
+		System.out.println("############################ Unregister");
+
 		for (UADService uadService : _uadServices) {
 			if (name.equals(uadService.getName())) {
 				_uadServices.remove(uadService);

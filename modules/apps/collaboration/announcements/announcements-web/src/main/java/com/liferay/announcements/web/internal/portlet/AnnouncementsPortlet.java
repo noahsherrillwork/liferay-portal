@@ -14,13 +14,22 @@
 
 package com.liferay.announcements.web.internal.portlet;
 
+import com.liferay.announcements.web.internal.uad.AnnouncementsUADServiceImpl;
+
 import com.liferay.announcements.constants.AnnouncementsPortletKeys;
+
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
+import com.liferay.user.associated.data.web.util.UADRegistryUtil;
+
+import java.util.Map;
+
 import javax.portlet.Portlet;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -58,6 +67,20 @@ public class AnnouncementsPortlet extends MVCPortlet {
 		unbind = "-"
 	)
 	protected void setRelease(Release release) {
+	}
+
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		System.out.println("########################## Attempting Register");
+
+		UADRegistryUtil.register(new AnnouncementsUADServiceImpl("temp"));
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		System.out.println("########################## Attempting Unregister");
+
+		UADRegistryUtil.unregister("temp");
 	}
 
 }

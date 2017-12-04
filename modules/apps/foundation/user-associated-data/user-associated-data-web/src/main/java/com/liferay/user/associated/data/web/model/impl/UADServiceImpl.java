@@ -31,7 +31,7 @@ public abstract class UADServiceImpl implements UADService {
 		_name = name;
 
 		_uadAssetsMap = new HashMap<>();
-		_uadAssets = new ArrayList<>();
+		uadAssets = new ArrayList<>();
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public abstract class UADServiceImpl implements UADService {
 
 		List<UADAsset> uadAssets = new ArrayList<>();
 
-		for (UADAsset uadAsset : _uadAssets) {
+		for (UADAsset uadAsset : uadAssets) {
 			if (uadAsset.getUserId() == userId) {
 				uadAssets.add(uadAsset);
 			}
@@ -89,7 +89,7 @@ public abstract class UADServiceImpl implements UADService {
 	@Override
 	public abstract void process(long userId);
 
-	protected final List<UADAsset> uadAssets;
+	protected List<UADAsset> uadAssets;
 
 	private final String _name;
 	private final Map<Long, List<UADAsset>> _uadAssetsMap;
