@@ -14,26 +14,16 @@
 
 package com.liferay.portal.search.internal.contributor.query;
 
-import com.liferay.expando.kernel.model.ExpandoBridge;
-import com.liferay.expando.kernel.model.ExpandoColumn;
-import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactory;
 import com.liferay.expando.kernel.util.ExpandoBridgeIndexer;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
-import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.SetUtil;
-import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Localization;
+import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.search.internal.expando.ExpandoQueryContributorHelper;
 import com.liferay.portal.search.spi.model.query.contributor.KeywordQueryContributor;
 import com.liferay.portal.search.spi.model.query.contributor.helper.KeywordQueryContributorHelper;
-
-import java.util.Set;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,94 +39,35 @@ public class ExpandoKeywordQueryContributor implements KeywordQueryContributor {
 		String keywords, BooleanQuery booleanQuery,
 		KeywordQueryContributorHelper keywordQueryContributorHelper) {
 
-		Stream<String> stream =
-			keywordQueryContributorHelper.getSearchClassNamesStream();
+		SearchContext searchContext =
+			keywordQueryContributorHelper.getSearchContext();
 
-		stream.forEach(
-			className -> contribute(
-				className, keywordQueryContributorHelper.getSearchContext(),
-				booleanQuery, keywords));
+		ExpandoQueryContributorHelper expandoQueryContributorHelper =
+			new ExpandoQueryContributorHelper(
+				expandoBridgeFactory, expandoBridgeIndexer,
+				expandoColumnLocalService, getLocalization());
+
+		expandoQueryContributorHelper.setAndSearch(searchContext.isAndSearch());
+		expandoQueryContributorHelper.setBooleanQuery(booleanQuery);
+		expandoQueryContributorHelper.setClassNamesStream(
+			keywordQueryContributorHelper.getSearchClassNamesStream());
+		expandoQueryContributorHelper.setCompanyId(
+			searchContext.getCompanyId());
+		expandoQueryContributorHelper.setKeywords(keywords);
+		expandoQueryContributorHelper.setLocale(searchContext.getLocale());
+
+		expandoQueryContributorHelper.contribute();
 	}
 
-	protected void contribute(
-		String attributeName, ExpandoBridge expandoBridge,
-		SearchContext searchContext, BooleanQuery booleanQuery,
-		String keywords) {
+	protected Localization getLocalization() {
 
-		UnicodeProperties properties = expandoBridge.getAttributeProperties(
-			attributeName);
+		// See LPS-72507
 
-		int indexType = GetterUtil.getInteger(
-			properties.getProperty(ExpandoColumnConstants.INDEX_TYPE));
-
-		if (indexType == ExpandoColumnConstants.INDEX_TYPE_NONE) {
-			return;
+		if (localization != null) {
+			return localization;
 		}
 
-		String fieldName = getExpandoFieldName(
-			searchContext, expandoBridge, attributeName);
-
-		boolean like = false;
-
-		if (indexType == ExpandoColumnConstants.INDEX_TYPE_TEXT) {
-			like = true;
-		}
-
-		if (searchContext.isAndSearch()) {
-			booleanQuery.addRequiredTerm(fieldName, keywords, like);
-		}
-		else {
-			_addTerm(booleanQuery, fieldName, keywords, like);
-		}
-	}
-
-	protected void contribute(
-		String className, SearchContext searchContext,
-		BooleanQuery booleanQuery, String keywords) {
-
-		ExpandoBridge expandoBridge = expandoBridgeFactory.getExpandoBridge(
-			searchContext.getCompanyId(), className);
-
-		Set<String> attributeNames = SetUtil.fromEnumeration(
-			expandoBridge.getAttributeNames());
-
-		if (SetUtil.isEmpty(attributeNames)) {
-			return;
-		}
-
-		for (String attributeName : attributeNames) {
-			contribute(
-				attributeName, expandoBridge, searchContext, booleanQuery,
-				keywords);
-		}
-	}
-
-	protected String getExpandoFieldName(
-		SearchContext searchContext, ExpandoBridge expandoBridge,
-		String attributeName) {
-
-		ExpandoColumn expandoColumn =
-			expandoColumnLocalService.getDefaultTableColumn(
-				expandoBridge.getCompanyId(), expandoBridge.getClassName(),
-				attributeName);
-
-		UnicodeProperties unicodeProperties =
-			expandoColumn.getTypeSettingsProperties();
-
-		int indexType = GetterUtil.getInteger(
-			unicodeProperties.getProperty(ExpandoColumnConstants.INDEX_TYPE));
-
-		String fieldName = expandoBridgeIndexer.encodeFieldName(
-			attributeName, indexType);
-
-		if (expandoColumn.getType() ==
-				ExpandoColumnConstants.STRING_LOCALIZED) {
-
-			fieldName = Field.getLocalizedName(
-				searchContext.getLocale(), fieldName);
-		}
-
-		return fieldName;
+		return LocalizationUtil.getLocalization();
 	}
 
 	@Reference
@@ -148,21 +79,6 @@ public class ExpandoKeywordQueryContributor implements KeywordQueryContributor {
 	@Reference
 	protected ExpandoColumnLocalService expandoColumnLocalService;
 
-	private void _addTerm(
-		BooleanQuery booleanQuery, String fieldName, String keywords,
-		boolean like) {
-
-		try {
-			booleanQuery.addTerm(fieldName, keywords, like);
-		}
-		catch (ParseException pe) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to parse field " + fieldName, pe);
-			}
-		}
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		ExpandoKeywordQueryContributor.class);
+	protected Localization localization;
 
 }
